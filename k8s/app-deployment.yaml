@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hacka-msc-mgmt-media
+  labels:
+    app: hacka-msc-mgmt-media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hacka-msc-mgmt-media
+  template:
+    metadata:
+      labels:
+        app: hacka-msc-mgmt-media
+    spec:
+      containers:
+        - name: hacka-msc-mgmt-media
+          image: josevitordurante/hacka-msc-mgmt-media:latest
+          ports:
+            - containerPort: 8088
+          env:
+            - name: PORT
+              value: "8088"
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: DB_NAME
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: DB_URL
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: DB_PORT
+            - name: DB_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: DB_PASSWORD
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
