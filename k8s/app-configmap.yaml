@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hacka-msc-mgmt-media-config
+data:
+  DB_NAME: ""
+  DB_URL: ""
+  DB_USERNAME: ""
+  DB_PASSWORD: ""
+  DB_PORT: ""

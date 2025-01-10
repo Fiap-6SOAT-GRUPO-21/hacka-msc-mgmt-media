@@ -1,0 +1,64 @@
+name: Deploy
+
+on:
+  workflow_call:
+  workflow_run:
+    workflows: [ "Build" ]
+    types:
+      - completed
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name hacka --region us-east-1
+
+      - name: Get RDS credentials from SSM Parameter Store
+        id: get-parameters
+        run: |
+          DB_URL=$(aws ssm get-parameter --name "/hacka/msc_mgmt_media_rds/rds/db_url" --with-decryption --query "Parameter.Value" --output text)
+          DB_USERNAME=$(aws ssm get-parameter --name "/hacka/msc_mgmt_media_rds/rds/db_username" --with-decryption --query "Parameter.Value" --output text)
+          DB_PASSWORD=$(aws ssm get-parameter --name "/hacka/msc_mgmt_media_rds/rds/db_password" --with-decryption --query "Parameter.Value" --output text)
+          DB_PORT=$(aws ssm get-parameter --name "/hacka/msc_mgmt_media_rds/rds/db_port" --with-decryption --query "Parameter.Value" --output text)
+          DB_NAME=$(aws ssm get-parameter --name "/hacka/msc_mgmt_media_rds/rds/db_name" --with-decryption --query "Parameter.Value" --output text)
+          echo "DB_URL=$DB_URL" >> $GITHUB_ENV
+          echo "DB_USERNAME=$DB_USERNAME" >> $GITHUB_ENV
+          echo "DB_PASSWORD=$DB_PASSWORD" >> $GITHUB_ENV
+          echo "DB_PORT=$DB_PORT" >> $GITHUB_ENV
+          echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
+
+      - name: Kubectl tool installer
+        uses: Azure/setup-kubectl@v4.0.0
+        with:
+          version: latest
+
+      - name: Update ConfigMap with RDS credentials
+        run: |
+          kubectl apply -f k8s/app-configmap.yaml
+          kubectl patch configmap hacka-msc-mgmt-media-config --type=merge -p='{"data": {"DB_NAME": "'"$DB_NAME"'", "DB_URL": "'"$DB_URL"'", "DB_USERNAME": "'"$DB_USERNAME"'", "DB_PASSWORD": "'"$DB_PASSWORD"'", "DB_PORT": "'"$DB_PORT"'"}}'
+
+      - name: Deploy Application
+        run: |
+          kubectl apply -f k8s/app-deployment.yaml
+          kubectl apply -f k8s/app-service.yaml
+          kubectl apply -f k8s/app-hpa.yaml
+          kubectl apply -f k8s/metrics.yaml
+          kubectl apply -f k8s/role.yaml
+          kubectl apply -f k8s/rolebinding.yaml

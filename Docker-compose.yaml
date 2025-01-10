@@ -1,0 +1,24 @@
+# Comando para executar: docker compose up --build --force-recreate
+version: '3.9'
+
+networks:
+  msc-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+
+services:
+  db_postgres_hacka_msc_mgmt_media:
+    container_name: db_postgres_hacka_msc_mgmt_media
+    image: 'postgres:13.4'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=mscmgmtmedia
+    ports:
+      - "5432:5432"
+    networks:
+      - msc-network
+    volumes:
+      - pgdata:/var/lib/postgresql/data
