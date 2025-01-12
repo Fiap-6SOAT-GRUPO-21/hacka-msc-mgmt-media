@@ -7,6 +7,7 @@ networks:
 
 volumes:
   pgdata:
+  rabbitmq_data:
 
 services:
   db_postgres_hacka_msc_mgmt_media:
@@ -22,3 +23,17 @@ services:
       - msc-network
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: 'rabbitmq:4-management'
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - msc-network
