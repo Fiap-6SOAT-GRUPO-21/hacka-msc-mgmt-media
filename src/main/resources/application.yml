@@ -41,9 +41,17 @@ springdoc:
     enabled: true
     path: /swagger-ui.html
 
-storage:
-  s3:
-    bucket-name: ${AWS_BUCKET:media-files}
+
+variables:
+  env: ${ENV:local}
+  aws:
     region: ${AWS_REGION:us-east-1}
-    access-key: ${AWS_ACCESS_KEY:access-key}
-    secret-key: ${AWS_SECRET_KEY:secret-key}
+
+    access-key: ${AWS_ACCESS_KEY:localstack}
+    secret-key: ${AWS_SECRET_KEY:localstack}
+    session-token: ${AWS_SESSION_TOKEN:localstack}
+
+    bucket-name: ${AWS_BUCKET:media-files}
+
+    queue-name-processing: ${QUEUE_NAME_PROCESSING:processing_media}
+    queue-name-result: ${QUEUE_NAME_RESULT:result_media}

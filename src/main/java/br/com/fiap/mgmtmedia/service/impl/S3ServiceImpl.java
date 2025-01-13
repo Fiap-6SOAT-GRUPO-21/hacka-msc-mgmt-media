@@ -1,9 +1,9 @@
 package br.com.fiap.mgmtmedia.service.impl;
 
 import br.com.fiap.mgmtmedia.service.S3Service;
-import br.com.fiap.mgmtmedia.storage.S3Properties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -24,13 +24,13 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class S3ServiceImpl implements S3Service {
 
-    private final S3Properties s3Properties;
+    @Value("${variables.aws.bucket-name}")
+    private String bucketName;
 
     private final S3Client s3Client;
 
     @Override
     public void putObject(String key, byte[] file) {
-        String bucketName = s3Properties.getBucketName();
         log.info("Uploading file to S3 bucket: {}", bucketName);
         PutObjectRequest objectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -45,7 +45,6 @@ public class S3ServiceImpl implements S3Service {
 
     @Override
     public byte[] getObject(String keyName) {
-        String bucketName = s3Properties.getBucketName();
         log.info("Downloading file from S3 bucket: {}", bucketName);
         GetObjectRequest objectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
@@ -64,7 +63,6 @@ public class S3ServiceImpl implements S3Service {
     public String generatePresignedUrl(String keyName) {
         log.info("Generating presigned URL for file: {}", keyName);
         try (S3Presigner presigner = S3Presigner.create()) {
-            String bucketName = s3Properties.getBucketName();
 
             GetObjectRequest objectRequest = GetObjectRequest.builder()
                     .bucket(bucketName)
@@ -86,7 +84,6 @@ public class S3ServiceImpl implements S3Service {
 
     @Override
     public void deleteObject(String key) {
-        String bucketName = s3Properties.getBucketName();
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)

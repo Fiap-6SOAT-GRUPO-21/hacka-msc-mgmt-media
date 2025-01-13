@@ -47,6 +47,41 @@ spec:
                 configMapKeyRef:
                   name: hacka-msc-mgmt-media-config
                   key: DB_PASSWORD
+            - name: ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: ENV
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: AWS_REGION
+            - name: AWS_ACCESS_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: AWS_ACCESS_KEY
+            - name: AWS_SECRET_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: AWS_SECRET_KEY
+            - name: AWS_SESSION_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: AWS_SESSION_TOKEN
+            - name: QUEUE_NAME_PROCESSING
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: QUEUE_NAME_PROCESSING
+            - name: QUEUE_NAME_RESULT
+              valueFrom:
+                configMapKeyRef:
+                  name: hacka-msc-mgmt-media-config
+                  key: QUEUE_NAME_RESULT
           resources:
             requests:
               memory: "128Mi"

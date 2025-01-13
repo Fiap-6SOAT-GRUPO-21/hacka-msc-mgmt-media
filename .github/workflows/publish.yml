@@ -38,11 +38,16 @@ jobs:
           DB_PASSWORD=$(aws ssm get-parameter --name "/hacka/msc_mgmt_media_rds/rds/db_password" --with-decryption --query "Parameter.Value" --output text)
           DB_PORT=$(aws ssm get-parameter --name "/hacka/msc_mgmt_media_rds/rds/db_port" --with-decryption --query "Parameter.Value" --output text)
           DB_NAME=$(aws ssm get-parameter --name "/hacka/msc_mgmt_media_rds/rds/db_name" --with-decryption --query "Parameter.Value" --output text)
+          SQS_QUEUE_PROCESSING=$(aws ssm get-parameter --name "/hacka/sqs/sqs_result_media" --query "Parameter.Value" --output text)
+          SQS_QUEUE_RESULT=$(aws ssm get-parameter --name "/hacka/sqs/result_media" --query "Parameter.Value" --output text)
           echo "DB_URL=$DB_URL" >> $GITHUB_ENV
           echo "DB_USERNAME=$DB_USERNAME" >> $GITHUB_ENV
           echo "DB_PASSWORD=$DB_PASSWORD" >> $GITHUB_ENV
           echo "DB_PORT=$DB_PORT" >> $GITHUB_ENV
           echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
+          echo "SQS_QUEUE_PROCESSING=$SQS_QUEUE_PROCESSING" >> $GITHUB_ENV
+          echo "SQS_QUEUE_RESULT=$SQS_QUEUE_RESULT" >> $GITHUB_ENV
+      
 
       - name: Kubectl tool installer
         uses: Azure/setup-kubectl@v4.0.0
@@ -52,7 +57,22 @@ jobs:
       - name: Update ConfigMap with RDS credentials
         run: |
           kubectl apply -f k8s/app-configmap.yaml
-          kubectl patch configmap hacka-msc-mgmt-media-config --type=merge -p='{"data": {"DB_NAME": "'"$DB_NAME"'", "DB_URL": "'"$DB_URL"'", "DB_USERNAME": "'"$DB_USERNAME"'", "DB_PASSWORD": "'"$DB_PASSWORD"'", "DB_PORT": "'"$DB_PORT"'"}}'
+          kubectl patch configmap hacka-msc-mgmt-media-config --type=merge -p="{
+            \"data\": {
+              \"DB_NAME\": \"$DB_NAME\",
+              \"DB_URL\": \"$DB_URL\",
+              \"DB_USERNAME\": \"$DB_USERNAME\",
+              \"DB_PASSWORD\": \"$DB_PASSWORD\",
+              \"DB_PORT\": \"$DB_PORT\",
+              \"ENV\": \"AWS\",
+              \"AWS_REGION\": \"us-east-1\",
+              \"AWS_ACCESS_KEY\": \"$AWS_ACCESS_KEY_ID\",
+              \"AWS_SECRET_KEY\": \"$AWS_SECRET_ACCESS_KEY\",
+              \"AWS_SESSION_TOKEN\": \"$AWS_SESSION_TOKEN\",
+              \"QUEUE_NAME_PROCESSING\": \"$SQS_QUEUE_PROCESSING\",
+              \"QUEUE_NAME_RESULT\": \"$SQS_QUEUE_RESULT\"
+            }
+          }"
 
       - name: Deploy Application
         run: |

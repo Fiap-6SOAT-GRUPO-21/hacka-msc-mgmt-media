@@ -24,16 +24,17 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  rabbitmq:
-    container_name: rabbitmq
-    image: 'rabbitmq:4-management'
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+# TODO - Depois de rodar o localstack com sqs rodar o comando abaixo para criar as filas em sqs_bootstrap.sh
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "4566:4566"
+    environment:
+      - SERVICES=sqs
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+      - DEBUG=1
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    networks:
-      - msc-network
+      - ./localstack-data:/var/lib/localstack  # Persistência dos dados

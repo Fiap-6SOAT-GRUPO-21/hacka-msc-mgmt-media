@@ -1,7 +1,7 @@
 package br.com.fiap.mgmtmedia.service.impl;
 
-import br.com.fiap.mgmtmedia.amqp.model.MediaMessage;
-import br.com.fiap.mgmtmedia.amqp.producer.RabbitProducer;
+import br.com.fiap.mgmtmedia.sqs.model.MediaMessage;
+import br.com.fiap.mgmtmedia.sqs.producer.SQSProducer;
 import br.com.fiap.mgmtmedia.entity.MediaMetadata;
 import br.com.fiap.mgmtmedia.enumerated.MediaStatus;
 import br.com.fiap.mgmtmedia.repository.MediaRepository;
@@ -23,7 +23,7 @@ public class MediaServiceImpl implements MediaService {
 
     private final MediaRepository mediaRepository;
 
-    private final RabbitProducer rabbitProducer;
+    private final SQSProducer SQSProducer;
 
     private final S3Service s3Service;
 
@@ -48,7 +48,7 @@ public class MediaServiceImpl implements MediaService {
                     .storagePath(fileName)
                     .userReference("userReference")
                     .build();
-            rabbitProducer.send(mediaMessage);
+            SQSProducer.publishMessage(mediaMessage);
 
             return storedMediaMetadata;
         } catch (IOException e) {

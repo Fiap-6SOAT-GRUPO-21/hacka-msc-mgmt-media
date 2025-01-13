@@ -1,4 +1,4 @@
-package br.com.fiap.mgmtmedia.amqp.model;
+package br.com.fiap.mgmtmedia.sqs.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
