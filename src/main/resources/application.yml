@@ -25,6 +25,13 @@ spring:
   output:
     ansi:
       enabled: Always
+  rabbitmq:
+    addresses: ${RABBITMQ_URL:localhost}:${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    exchange-name: media.processing.exchange
+    queue-name: media.processing.queue
+    routing-key: media.processing
 
 springdoc:
   api-docs:
