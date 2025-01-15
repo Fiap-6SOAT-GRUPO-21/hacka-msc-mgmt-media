@@ -20,8 +20,7 @@ spring:
           lob:
             non_contextual_creation: true
     hibernate:
-      ddl-auto: create
-    defer-datasource-initialization:
+      ddl-auto: update
   output:
     ansi:
       enabled: Always
@@ -29,6 +28,13 @@ spring:
     addresses: ${RABBITMQ_URL:localhost}:${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  mvc:
+    problemdetails:
+      enabled: true
 
 springdoc:
   api-docs:
