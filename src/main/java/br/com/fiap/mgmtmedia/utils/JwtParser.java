@@ -3,15 +3,17 @@ package br.com.fiap.mgmtmedia.utils;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import lombok.experimental.UtilityClass;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Map;
 
+@UtilityClass
 public class JwtParser {
 
-    public static String getIdentifyerUser() {
+    public static String getIdentifierUser() {
         String token = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
                 .getRequest().getHeader(HttpHeaders.AUTHORIZATION);
 
