@@ -8,6 +8,7 @@ import br.com.fiap.mgmtmedia.service.MediaService;
 import br.com.fiap.mgmtmedia.service.S3Service;
 import br.com.fiap.mgmtmedia.sqs.model.MediaMessage;
 import br.com.fiap.mgmtmedia.sqs.producer.SQSProducer;
+import br.com.fiap.mgmtmedia.utils.JwtParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,10 +42,12 @@ public class MediaServiceImpl implements MediaService {
 
             s3Service.putObject(fileName, mediaFile.getBytes());
 
+            final String userIdentifier = JwtParser.getUserIdentifier();
+
             MediaMetadata mediaMetadata = MediaMetadata.builder()
                     .status(MediaStatus.UPLOADED)
                     .storagePath(buildStoragePath(fileName))
-                    .userReference("userReference")
+                    .userReference(userIdentifier)
                     .build();
 
             final MediaMetadata storedMediaMetadata = mediaRepository.save(mediaMetadata);
@@ -52,7 +55,7 @@ public class MediaServiceImpl implements MediaService {
             MediaMessage mediaMessage = MediaMessage.builder()
                     .mediaId(storedMediaMetadata.getMediaId())
                     .storagePath(fileName)
-                    .userReference("userReference")
+                    .userReference(userIdentifier)
                     .build();
 
             sqsProducer.publishMessage(mediaMessage);
