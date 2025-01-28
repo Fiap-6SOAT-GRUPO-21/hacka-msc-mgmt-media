@@ -10,4 +10,8 @@ public class MediaException extends RuntimeException {
         super(message);
     }
 
+    public MediaException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }
