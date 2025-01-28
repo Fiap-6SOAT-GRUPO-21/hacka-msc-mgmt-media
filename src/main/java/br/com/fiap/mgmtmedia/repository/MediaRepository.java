@@ -11,4 +11,6 @@ public interface MediaRepository extends JpaRepository<MediaMetadata, String> {
 
     Page<MediaMetadata> findByUserReference(Pageable pageable, String userReference);
 
+    boolean existsByStoragePathAndUserReference(String storagePath, String userReference);
+
 }
