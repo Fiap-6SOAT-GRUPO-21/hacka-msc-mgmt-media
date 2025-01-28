@@ -44,7 +44,6 @@ springdoc:
     enabled: true
     path: /swagger-ui.html
 
-
 variables:
   env: ${ENV:local}
   aws:
@@ -54,7 +53,7 @@ variables:
     secret-key: ${AWS_SECRET_KEY:localstack}
     session-token: ${AWS_SESSION_TOKEN:localstack}
 
-    bucket-name: ${AWS_BUCKET:media-files}
+    bucket-name: ${HACKA_BUCKET_NAME_MEDIA_FILES:media-files}
 
     queue-name-processing: ${QUEUE_NAME_PROCESSING:processing_media}
     queue-name-result: ${QUEUE_NAME_RESULT:result_media}

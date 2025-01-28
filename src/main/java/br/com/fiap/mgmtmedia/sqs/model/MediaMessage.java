@@ -1,5 +1,6 @@
 package br.com.fiap.mgmtmedia.sqs.model;
 
+import br.com.fiap.mgmtmedia.enumerated.MediaStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 
@@ -11,7 +12,7 @@ public record MediaMessage(
         UUID mediaId,
         String storagePath,
         String userReference,
-        String status,
+        MediaStatus status,
         String zippedPath
 ) {
 }
