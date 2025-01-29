@@ -4,8 +4,7 @@ import br.com.fiap.mgmtmedia.entity.MediaMetadata;
 import br.com.fiap.mgmtmedia.service.MediaService;
 import br.com.fiap.mgmtmedia.utils.JwtParser;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,7 +20,7 @@ public class MediaController {
 
     private final MediaService mediaService;
 
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MediaMetadata> uploadMediaFile(@RequestParam("media") MultipartFile mediaFile) {
         return ResponseEntity.ok(mediaService.uploadMediaFile(mediaFile));
     }
