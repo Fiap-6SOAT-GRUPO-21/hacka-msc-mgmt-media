@@ -11,12 +11,13 @@ import br.com.fiap.mgmtmedia.sqs.producer.SQSProducer;
 import br.com.fiap.mgmtmedia.utils.JwtParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -100,9 +101,21 @@ public class MediaServiceImpl implements MediaService {
         sqsProducer.publishMessage(mediaMessage);
     }
 
+    public String getURLMediaMetadataById(UUID id) {
+        log.debug("Fetching getURLMediaMetadataById metadata for id: {}", id);
+        Optional<MediaMetadata> mediaMetadataById = mediaRepository.findById(id);
+        return mediaMetadataById.map(a -> s3Service.generatePresignedUrl(a.getStoragePath())).orElse(null);
+    }
+
     @Override
-    public Page<MediaMetadata> getMediaMetadataByUser(Pageable pageable, String userReference) {
-        log.debug("Fetching media metadata for user: {}", userReference);
-        return mediaRepository.findByUserReference(pageable, userReference);
+    public Optional<MediaMetadata> getMediaMetadataById(UUID id) {
+        log.debug("Fetching getMediaMetadataById metadata for id: {}", id);
+        return mediaRepository.findById(id);
+    }
+
+    @Override
+    public List<MediaMetadata> getMediaMetadataByUser(String userReference) {
+        log.debug("Fetching getMediaMetadataByUser metadata for user: {}", userReference);
+        return mediaRepository.findByUserReference(userReference);
     }
 }

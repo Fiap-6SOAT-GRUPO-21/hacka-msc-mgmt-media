@@ -33,9 +33,6 @@ public class SQSConsumer {
 
     private final MediaRepository mediaRepository;
 
-    // TODO: add this class to context (Bean)
-    private final ModelMapper modelMapper = new ModelMapper();
-
     @Scheduled(fixedDelay = 5000)
     public void consumeResultMessages() {
         String queueUrl = null;
@@ -50,7 +47,7 @@ public class SQSConsumer {
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest()
                 .withQueueUrl(queueUrl)
                 .withMaxNumberOfMessages(10)
-                .withWaitTimeSeconds(10);
+                .withWaitTimeSeconds(20);
 
         try {
             ReceiveMessageResult receiveMessageResult = amazonSQSClient.receiveMessage(receiveMessageRequest);
@@ -62,14 +59,12 @@ public class SQSConsumer {
             }
 
             for (Message message : messages) {
-                // Separate this logic into a method
                 try {
                     processMessage(message);
-                    deleteMessage(queueUrl, message);
                 } catch (Exception e) {
-                    //TODO: RETIRAR DEPOIS
-                    deleteMessage(queueUrl, message);
                     log.error("Error processing message {}: {}", message.getMessageId(), e.getMessage(), e);
+                } finally {
+                    amazonSQSClient.deleteMessage(queueUrl, message.getReceiptHandle());
                 }
             }
         } catch (Exception e) {
@@ -92,14 +87,5 @@ public class SQSConsumer {
         mediaMetadata.setZippedFolderPath(mediaMessageReceived.getZippedPath());
 
         mediaRepository.save(mediaMetadata);
-    }
-
-    private void deleteMessage(String queueUrl, Message message) {
-        try {
-            amazonSQSClient.deleteMessage(queueUrl, message.getReceiptHandle());
-            log.info("Successfully deleted message with ID: {}", message.getMessageId());
-        } catch (Exception e) {
-            log.error("Failed to delete message {}: {}", message.getMessageId(), e.getMessage(), e);
-        }
     }
 }
