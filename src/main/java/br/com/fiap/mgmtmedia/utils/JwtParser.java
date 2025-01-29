@@ -51,4 +51,20 @@ public class JwtParser {
 
         return authorizationHeader.substring(7);
     }
+
+    public static String getPhoneNumber() {
+        String token = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
+                .getRequest().getHeader(org.apache.http.HttpHeaders.AUTHORIZATION);
+
+        if (token == null || token.isBlank()) throw new RuntimeException("Token não informado");
+        if (token.contains("Bearer ")) token = token.substring(7);
+        DecodedJWT jwt = JWT.decode(token);
+        Map<String, Claim> claims = jwt.getClaims();
+
+        if (claims.get("username") == null) {
+            return null;
+        }
+
+        return claims.get("username").asString();
+    }
 }

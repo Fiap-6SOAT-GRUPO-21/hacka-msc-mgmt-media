@@ -92,6 +92,8 @@ public class MediaServiceImpl implements MediaService {
                 .mediaId(mediaMetadata.getMediaId())
                 .storagePath(mediaMetadata.getStoragePath())
                 .userReference(mediaMetadata.getUserReference())
+                .phoneNumber(JwtParser.getPhoneNumber())
+                .status(mediaMetadata.getStatus().name())
                 .build();
 
         log.debug("Sending message to SQS for media ID: {}", mediaMetadata.getMediaId());

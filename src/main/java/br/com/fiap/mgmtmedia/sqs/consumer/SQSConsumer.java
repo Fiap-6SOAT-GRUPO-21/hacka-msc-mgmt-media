@@ -1,6 +1,7 @@
 package br.com.fiap.mgmtmedia.sqs.consumer;
 
 import br.com.fiap.mgmtmedia.entity.MediaMetadata;
+import br.com.fiap.mgmtmedia.enumerated.MediaStatus;
 import br.com.fiap.mgmtmedia.exception.custom.MediaException;
 import br.com.fiap.mgmtmedia.repository.MediaRepository;
 import br.com.fiap.mgmtmedia.sqs.model.MediaMessage;
@@ -8,6 +9,7 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.modelmapper.ModelMapper;
@@ -65,6 +67,8 @@ public class SQSConsumer {
                     processMessage(message);
                     deleteMessage(queueUrl, message);
                 } catch (Exception e) {
+                    //TODO: RETIRAR DEPOIS
+                    deleteMessage(queueUrl, message);
                     log.error("Error processing message {}: {}", message.getMessageId(), e.getMessage(), e);
                 }
             }
@@ -77,14 +81,15 @@ public class SQSConsumer {
         log.info("Processing message with ID: {}", message.getMessageId());
         log.info("Message body: {}", message.getBody());
 
-        MediaMessage mediaMessageReceived = modelMapper.map(message.getBody(), MediaMessage.class);
+        Gson gson = new Gson();
+        MediaMessage mediaMessageReceived = gson.fromJson(message.getBody(), MediaMessage.class);
 
-        MediaMetadata mediaMetadata = mediaRepository.findById(mediaMessageReceived.mediaId().toString()).orElseThrow(
+        MediaMetadata mediaMetadata = mediaRepository.findById(mediaMessageReceived.getMediaId()).orElseThrow(
                 () -> new MediaException("Media not found")
         );
 
-        mediaMetadata.setStatus(mediaMessageReceived.status());
-        mediaMetadata.setZippedFolderPath(mediaMessageReceived.zippedPath());
+        mediaMetadata.setStatus(MediaStatus.valueOf(mediaMessageReceived.getStatus()));
+        mediaMetadata.setZippedFolderPath(mediaMessageReceived.getZippedPath());
 
         mediaRepository.save(mediaMetadata);
     }
