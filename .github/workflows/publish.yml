@@ -47,7 +47,7 @@ jobs:
           echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
           echo "SQS_QUEUE_PROCESSING=$SQS_QUEUE_PROCESSING" >> $GITHUB_ENV
           echo "SQS_QUEUE_RESULT=$SQS_QUEUE_RESULT" >> $GITHUB_ENV
-      
+
 
       - name: Kubectl tool installer
         uses: Azure/setup-kubectl@v4.0.0

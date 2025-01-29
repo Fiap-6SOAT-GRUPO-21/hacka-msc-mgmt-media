@@ -12,7 +12,6 @@ import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.google.gson.Gson;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
