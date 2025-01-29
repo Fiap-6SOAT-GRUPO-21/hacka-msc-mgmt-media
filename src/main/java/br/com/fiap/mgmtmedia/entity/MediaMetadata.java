@@ -2,6 +2,8 @@ package br.com.fiap.mgmtmedia.entity;
 
 import br.com.fiap.mgmtmedia.enumerated.MediaStatus;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
@@ -23,6 +25,7 @@ public class MediaMetadata extends AuditData {
 
     private String storagePath;
 
+    @Enumerated(EnumType.STRING)
     private MediaStatus status;
 
     private String userReference;

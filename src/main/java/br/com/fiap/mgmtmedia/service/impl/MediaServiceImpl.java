@@ -1,63 +1,121 @@
 package br.com.fiap.mgmtmedia.service.impl;
 
-import br.com.fiap.mgmtmedia.sqs.model.MediaMessage;
-import br.com.fiap.mgmtmedia.sqs.producer.SQSProducer;
 import br.com.fiap.mgmtmedia.entity.MediaMetadata;
 import br.com.fiap.mgmtmedia.enumerated.MediaStatus;
+import br.com.fiap.mgmtmedia.exception.custom.MediaException;
 import br.com.fiap.mgmtmedia.repository.MediaRepository;
 import br.com.fiap.mgmtmedia.service.MediaService;
 import br.com.fiap.mgmtmedia.service.S3Service;
+import br.com.fiap.mgmtmedia.sqs.model.MediaMessage;
+import br.com.fiap.mgmtmedia.sqs.producer.SQSProducer;
+import br.com.fiap.mgmtmedia.utils.JwtParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MediaServiceImpl implements MediaService {
 
+    private static final String PENDING_PROCESS_FOLDER = "pending-process";
+
+    private static final String PROCESSED_FOLDER = "processed";
+
     private final MediaRepository mediaRepository;
 
-    private final SQSProducer SQSProducer;
+    private final SQSProducer sqsProducer;
 
     private final S3Service s3Service;
 
     @Override
     public MediaMetadata uploadMediaFile(MultipartFile mediaFile) {
-        log.debug("Uploading media file: {}", mediaFile.toString());
+        validateMediaFile(mediaFile);
+
+        log.info("Starting upload of media file: {}", mediaFile.getOriginalFilename());
 
         try {
-            String fileName = mediaFile.getOriginalFilename();
-            s3Service.putObject(fileName, mediaFile.getBytes());
-            log.info("File uploaded successfully.");
+            String userIdentifier = JwtParser.getUserIdentifier();
 
-            MediaMetadata mediaMetadata = MediaMetadata.builder()
-                    .status(MediaStatus.UPLOADED)
-                    .userReference("userReference")
-                    .build();
+            MediaMetadata mediaMetadata = initializeMediaMetadata(userIdentifier);
 
-            final MediaMetadata storedMediaMetadata = mediaRepository.save(mediaMetadata);
+            String storagePath = buildObjectKey(userIdentifier, mediaMetadata.getMediaId().toString());
+            mediaMetadata.setStoragePath(storagePath);
 
-            MediaMessage mediaMessage = MediaMessage.builder()
-                    .mediaId(storedMediaMetadata.getMediaId())
-                    .storagePath(fileName)
-                    .userReference("userReference")
-                    .build();
-            SQSProducer.publishMessage(mediaMessage);
+            mediaMetadata = mediaRepository.save(mediaMetadata);
 
-            return storedMediaMetadata;
+            saveFileToS3(mediaFile, storagePath);
+
+            sendMediaMessage(mediaMetadata);
+
+            log.info("Media file uploaded successfully: {}", mediaMetadata);
+
+            return mediaMetadata;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.error("Error uploading media file: {}", e.getMessage(), e);
+            throw new MediaException("Error uploading media file", e);
         }
     }
 
+    private void validateMediaFile(MultipartFile mediaFile) {
+        if (mediaFile == null || mediaFile.isEmpty()) {
+            throw new MediaException("Invalid media file. File is null or empty.");
+        }
+    }
+
+    private MediaMetadata initializeMediaMetadata(String userIdentifier) {
+        return mediaRepository.save(
+                MediaMetadata.builder()
+                        .status(MediaStatus.UPLOADED)
+                        .userReference(userIdentifier)
+                        .storagePath("")
+                        .build()
+        );
+    }
+
+    private String buildObjectKey(String userIdentifier, String mediaId) {
+        return String.format("%s/%s/%s", PENDING_PROCESS_FOLDER, userIdentifier, mediaId);
+    }
+
+    private void saveFileToS3(MultipartFile mediaFile, String objectKey) throws IOException {
+        log.debug("Saving file to S3 with object key: {}", objectKey);
+        s3Service.putObject(objectKey, mediaFile.getBytes());
+    }
+
+    private void sendMediaMessage(MediaMetadata mediaMetadata) {
+        MediaMessage mediaMessage = MediaMessage.builder()
+                .mediaId(mediaMetadata.getMediaId())
+                .storagePath(mediaMetadata.getStoragePath())
+                .userReference(mediaMetadata.getUserReference())
+                .phoneNumber(JwtParser.getPhoneNumber())
+                .status(mediaMetadata.getStatus().name())
+                .build();
+
+        log.debug("Sending message to SQS for media ID: {}", mediaMetadata.getMediaId());
+        sqsProducer.publishMessage(mediaMessage);
+    }
+
+    public String getURLMediaMetadataById(UUID id) {
+        log.debug("Fetching getURLMediaMetadataById metadata for id: {}", id);
+        Optional<MediaMetadata> mediaMetadataById = mediaRepository.findById(id);
+        return mediaMetadataById.map(a -> s3Service.generatePresignedUrl(a.getStoragePath())).orElse(null);
+    }
+
     @Override
-    public Page<MediaMetadata> getMediaMetadataByUser(Pageable pageable, String userReference) {
-        return mediaRepository.findByUserReference(pageable, userReference);
+    public Optional<MediaMetadata> getMediaMetadataById(UUID id) {
+        log.debug("Fetching getMediaMetadataById metadata for id: {}", id);
+        return mediaRepository.findById(id);
+    }
+
+    @Override
+    public List<MediaMetadata> getMediaMetadataByUser(String userReference) {
+        log.debug("Fetching getMediaMetadataByUser metadata for user: {}", userReference);
+        return mediaRepository.findByUserReference(userReference);
     }
 }

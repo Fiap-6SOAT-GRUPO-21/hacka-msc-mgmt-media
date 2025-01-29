@@ -20,18 +20,17 @@ spring:
           lob:
             non_contextual_creation: true
     hibernate:
-      ddl-auto: create
-    defer-datasource-initialization:
+      ddl-auto: update
   output:
     ansi:
       enabled: Always
-  rabbitmq:
-    addresses: ${RABBITMQ_URL:localhost}:${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
-    exchange-name: media.processing.exchange
-    queue-name: media.processing.queue
-    routing-key: media.processing
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+  mvc:
+    problemdetails:
+      enabled: true
 
 springdoc:
   api-docs:
@@ -40,7 +39,6 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
-
 
 variables:
   env: ${ENV:local}
@@ -51,7 +49,7 @@ variables:
     secret-key: ${AWS_SECRET_KEY:localstack}
     session-token: ${AWS_SESSION_TOKEN:localstack}
 
-    bucket-name: ${AWS_BUCKET:media-files}
+    bucket-name: ${HACKA_BUCKET_NAME_MEDIA_FILES:media-files}
 
     queue-name-processing: ${QUEUE_NAME_PROCESSING:processing_media}
     queue-name-result: ${QUEUE_NAME_RESULT:result_media}

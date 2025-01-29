@@ -1,11 +1,11 @@
 package br.com.fiap.mgmtmedia.storage;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
@@ -32,23 +32,23 @@ public class S3Config {
 
     @Bean
     public S3Client s3Client() {
-        AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(accessKey, secretKey);
+        AwsSessionCredentials awsSessionCredentials = AwsSessionCredentials.create(accessKey, secretKey, sessionToken);
 
         // Se for ambiente local (usando o LocalStack)
         if (env.equals("local")) {
             log.info("Running in local environment, using LocalStack for S3");
             return S3Client.builder()
                     .region(Region.of(region))
-                    .credentialsProvider(() -> awsBasicCredentials)
+                    .credentialsProvider(StaticCredentialsProvider.create(awsSessionCredentials))
                     .endpointOverride(URI.create("http://localhost:4566"))
                     .forcePathStyle(true)
                     .build();
         }
 
-        log.info("Running in AWS environment");
+        log.info("Running S3 in AWS environment");
         return S3Client.builder()
                 .region(Region.of(region))
-                .credentialsProvider(() -> awsBasicCredentials)
+                .credentialsProvider(StaticCredentialsProvider.create(awsSessionCredentials))
                 .build();
     }
 
